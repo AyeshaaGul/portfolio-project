@@ -11,11 +11,7 @@ import re
 # Create your views here.
 def index (request):
     blogs = Blog.objects.all()
-    if len(blogs) >= 3:
-        random_blogs = random.sample(list(blogs), 3)
-    else:
-        random_blogs = blogs  # If less than 3 blogs, just return all of them
-   
+    random_blogs = random.sample(list(blogs), 3)
     context = {'random_blogs': random_blogs}
     return render(request, 'index.html', context)
 
@@ -58,7 +54,8 @@ def contact (request):
                 messages.error(request, 'Email or Phone is Invalid!')
     return render(request, 'contact.html', {})
 
-
+def projects (request):
+    return render(request, 'projects.html')
 
 def blog(request):
     blogs = Blog.objects.all().order_by('-time')
@@ -82,16 +79,32 @@ def categories(request):
     all_categories = Blog.objects.values('category').distinct().order_by('category')
     return render(request, "categories.html", {'all_categories': all_categories})
 
+def search(request):
+    query = request.GET.get('q')
+    query_list = query.split()
+    results = Blog.objects.none()
+    for word in query_list:
+        results = results | Blog.objects.filter(Q(title__contains=word) | Q(content__contains=word)).order_by('-time')
+    paginator = Paginator(results, 3)
+    page = request.GET.get('page')
+    results = paginator.get_page(page)
+    if len(results) == 0:
+        message = "Sorry, no results found for your search query."
+    else:
+        message = ""
+    return render(request, 'search.html', {'results': results, 'query': query, 'message': message})
 
 
-
-def project (request, slug):
+def blogpost (request, slug):
     try:
         blog = Blog.objects.get(slug=slug)
         context = {'blog': blog}
-        return render(request, 'project.html', context)
+        return render(request, 'blogpost.html', context)
     except Blog.DoesNotExist:
-        context = {'message': 'Project not found'}
+        context = {'message': 'Blog post not found'}
         return render(request, '404.html', context, status=404)
 
-
+# def blogpost (request, slug):
+#     blog = Blog.objects.filter(slug=slug).first()
+#     context = {'blog': blog}
+#     return render(request, 'blogpost.html', context)

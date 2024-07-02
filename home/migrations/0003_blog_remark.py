@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='blog',
             name='remark',
-            field=ckeditor.fields.RichTextField(null=True),
+            field=ckeditor.fields.RichTextField(null=True, unique=True),
         ),
     ]
